@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" ></script>
+
+    <script>
+        function load() {
+            $.ajax({
+                type: 'POST',
+                url: 'http://localhost:8080/cinema/hall',
+                dataType: 'json'
+            }).done(function (data) {
+                let sizeRow = 0;
+                let sizeSeat = 0;
+                data.forEach(el => {
+                    sizeRow = el.row > sizeRow ? el.row : sizeRow;
+                    sizeSeat = el.seat > sizeSeat ? el.seat : sizeSeat;
+                });
+
+                let table = '<thead><tr>';
+                table += '<th style="width: 120px;">Ряд / Место</th>';
+                for (let i = 1; i <= sizeSeat; i++) {
+                    table += '<th>' + i + '</th>';
+                }
+                table += '</tr></thead>';
+
+                table += '<tbody>';
+                for (let i = 1; i <= sizeRow; i++) {
+                    table += '<tr name=' + i + '><td>' + i + '</td>';
+                    for (let j = 1; j <= sizeSeat; j++) {
+                        table += '<td name=' + j + '></td>';
+                    }
+                    table += '</tr>';
+                }
+                table += '</tbody>';
+                $('#table').html(table);
+
+                data.forEach(el => {
+                    let radio = $('#table tr[name=' + el.row + '] td[name=' + el.seat + ']')[0];
+                    radio.innerHTML = el.accountPhone == 0 ? '<input type="radio" name="ticket" value=' + el.id + '>' + el.price : 'забронировано';
+                });
+            }).fail(function (err) {
+                alert(err);
+            });
+        };
+
+        function payment() {
+            let id = $('input[name=ticket]:checked');
+            if (id.length === 0) {
+                let msg = $('#msg');
+                msg.text('Выберете место');
+            } else {
+                window.location.href = 'http://localhost:8080/cinema/payment.html?id=' + id.val();
+            }
+        }
+
+        $(document).ready(function(){
+            load();
+            setInterval('load()',10000);
+        });
+    </script>
+
+    <title>Бронирование билетов!</title>
+</head>
+<body>
+    <div class="container">
+        <div class="row pt-3">
+            <h4>Бронирование мест на сеанс</h4>
+            <table class="table table-bordered" id="table"></table>
+        </div>
+        <div class="row float-right">
+            <button type="button" class="btn btn-success" onclick="payment();">Оплатить</button>
+        </div>
+        <p id="msg"></p>
+    </div>
+</body>
+</html>

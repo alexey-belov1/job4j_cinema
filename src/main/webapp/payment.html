@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" ></script>
+
+    <script>
+        function getGet(name) {
+            let s = window.location.search;
+            s = s.match(new RegExp(name + '=([^&=]+)'));
+            return s ? s[1] : false;
+        }
+
+        $(document).ready(function() {
+            let id = getGet("id");
+            $(document).ready(function() {
+                $.ajax({
+                    type: 'GET',
+                    url: 'http://localhost:8080/cinema/payment',
+                    data: {id: id},
+                    dataType: 'json'
+                }).done(function(data) {
+                    let place = $('#place');
+                    if (data == null || data.accountPhone != 0) {
+                        window.location.href = 'http://localhost:8080/cinema';
+                    }
+                    place.text('Вы выбрали ряд ' + data.row + ' место ' +  data.seat + ', сумма : ' + data.price + ' рублей.');
+                    $('#id').attr('value', id);
+                }).fail(function(err){
+                    alert(err);
+                });
+            });
+        });
+
+        function validate() {
+            let username = $('#username');
+            let phone = $('#phone');
+            let msg = $('#msg');
+            let args = [username, phone];
+
+            for (let i = 0; i < args.length; i++) {
+                if (args[i].val() == '') {
+                    msg.text('Заполните поле: ' + args[i].attr('placeholder'));
+                    return false;
+                }
+            }
+            if (!/^[1-9][0-9]*$/.test(phone.val())) {
+                msg.text('Неверный формат для ' + phone.attr('placeholder'));
+                return false;
+            }
+            return true;
+        }
+
+        function send() {
+            let username = $('#username');
+            let phone = $('#phone');
+            let msg = $('#msg');
+            let id = $('#id');
+
+            $.ajax({
+                type: 'POST',
+                url: 'http://localhost:8080/cinema/payment',
+                data: {id: id.val(), username: username.val(), phone: phone.val()},
+                dataType: 'json'
+            }).done(function(data) {
+                if (data.result == true) {
+                    msg.text(data.msg);
+                    setTimeout(function(){window.location.href = 'http://localhost:8080/cinema'; }, 1000);
+                } else {
+                    msg.text(data.msg);
+                }
+            }).fail(function(err){
+                alert(err);
+            });
+        }
+
+        function execute() {
+            if (validate()) {
+                send();
+            }
+        }
+    </script>
+
+    <title>Бронирование билетов!</title>
+</head>
+<body>
+    <div class="container">
+        <div class="row pt-3">
+            <h3>
+                <span id="place"></span>
+            </h3>
+        </div>
+        <div class="row">
+            <form>
+                <input type="hidden" id="id" name="id">
+                <div class="form-group">
+                    <label for="username">ФИО</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="ФИО">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Номер телефона</label>
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder="Номер телефона">
+                </div>
+                <button type="button" class="btn btn-success" onclick="execute();">Оплатить</button>
+                <p id="msg"></p>
+            </form>
+        </div>
+    </div>
+</body>
