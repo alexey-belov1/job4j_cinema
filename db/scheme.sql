@@ -1,14 +1,15 @@
-create table hall (
-    id serial primary key ,
-    row integer,
-    seat integer,
-    price integer,
-    account_phone integer
-);
-
 create table account (
     phone integer primary key,
-    name TEXT
+    name TEXT not null
+);
+
+create table hall (
+    id serial primary key,
+    row integer not null,
+    seat integer not null,
+    price integer not null,
+    account_phone integer references account(phone) on delete set null,
+    unique (row, seat)
 );
 
 insert into hall(row, seat, price) values (1, 1, 300);
